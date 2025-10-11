@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Pill, Plus, Search, Edit2, Trash2, X, CheckCircle, AlertCircle, RefreshCw, Download, Filter } from 'lucide-react';
+import { Pill, Plus, Search, Edit2, Trash2, X, CheckCircle, AlertCircle, RefreshCw, Download, Filter, Upload, FileSpreadsheet } from 'lucide-react';
 import { medicinesAPI } from '../services/api';
+import * as XLSX from 'xlsx';
 
 export default function MedicineDatabaseApp({ appData, setAppData }) {
   const [medicines, setMedicines] = useState([]);
@@ -13,6 +14,7 @@ export default function MedicineDatabaseApp({ appData, setAppData }) {
   const [editingMedicine, setEditingMedicine] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [uploadProgress, setUploadProgress] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -102,36 +104,182 @@ export default function MedicineDatabaseApp({ appData, setAppData }) {
     }
   };
 
-const handleSave = async (medicineData) => {
-  try {
-    // Clean the data - convert empty strings to null for numeric fields
-    const cleanedData = {
-      ...medicineData,
-      mrp: medicineData.mrp === '' ? null : parseFloat(medicineData.mrp),
-      purchase_price: medicineData.purchase_price === '' ? null : parseFloat(medicineData.purchase_price),
-      gst_percentage: medicineData.gst_percentage === '' ? 12 : parseInt(medicineData.gst_percentage),
-      reorder_level: medicineData.reorder_level === '' ? 50 : parseInt(medicineData.reorder_level),
-    };
+  const handleSave = async (medicineData) => {
+    try {
+      // Clean the data
+      const cleanedData = {
+        ...medicineData,
+        mrp: medicineData.mrp === '' ? null : parseFloat(medicineData.mrp),
+        purchase_price: medicineData.purchase_price === '' ? null : parseFloat(medicineData.purchase_price),
+        gst_percentage: medicineData.gst_percentage === '' ? 12 : parseInt(medicineData.gst_percentage),
+        reorder_level: medicineData.reorder_level === '' ? 50 : parseInt(medicineData.reorder_level),
+      };
 
-    if (editingMedicine) {
-      const result = await medicinesAPI.update(editingMedicine.id, cleanedData);
-      if (result.success) {
-        setMedicines(medicines.map(m => m.id === editingMedicine.id ? result.data : m));
-        showNotification('✅ Medicine updated successfully', 'success');
+      if (editingMedicine) {
+        const result = await medicinesAPI.update(editingMedicine.id, cleanedData);
+        if (result.success) {
+          setMedicines(medicines.map(m => m.id === editingMedicine.id ? result.data : m));
+          showNotification('✅ Medicine updated successfully', 'success');
+        }
+      } else {
+        const result = await medicinesAPI.create(cleanedData);
+        if (result.success) {
+          setMedicines([...medicines, result.data]);
+          showNotification('✅ Medicine added successfully', 'success');
+        }
       }
-    } else {
-      const result = await medicinesAPI.create(cleanedData);
-      if (result.success) {
-        setMedicines([...medicines, result.data]);
-        showNotification('✅ Medicine added successfully', 'success');
-      }
+      setShowForm(false);
+      setEditingMedicine(null);
+    } catch (error) {
+      showNotification('❌ Failed to save medicine: ' + error.message, 'error');
     }
-    setShowForm(false);
-    setEditingMedicine(null);
-  } catch (error) {
-    showNotification('❌ Failed to save medicine: ' + error.message, 'error');
-  }
-};
+  };
+
+  // BULK UPLOAD FUNCTIONS
+  const downloadTemplate = () => {
+    const template = [
+      {
+        'Medicine Name*': 'Paracetamol',
+        'Generic Name': 'Acetaminophen',
+        'Category': 'Tablet',
+        'Type': 'Allopathy',
+        'Manufacturer': 'Cipla Ltd',
+        'MRP*': '12.50',
+        'Purchase Price': '8.00',
+        'HSN Code': '3004',
+        'GST %': '12',
+        'Reorder Level': '50',
+        'Requires Prescription': 'No',
+        'Description': 'Pain reliever'
+      },
+      {
+        'Medicine Name*': 'Aspirin',
+        'Generic Name': 'Acetylsalicylic Acid',
+        'Category': 'Tablet',
+        'Type': 'Allopathy',
+        'Manufacturer': 'Bayer',
+        'MRP*': '25.00',
+        'Purchase Price': '18.00',
+        'HSN Code': '3004',
+        'GST %': '12',
+        'Reorder Level': '30',
+        'Requires Prescription': 'Yes',
+        'Description': 'Blood thinner'
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(template);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Medicines Template');
+    
+    // Set column widths
+    worksheet['!cols'] = [
+      { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 },
+      { wch: 20 }, { wch: 10 }, { wch: 15 }, { wch: 12 },
+      { wch: 8 }, { wch: 15 }, { wch: 20 }, { wch: 30 }
+    ];
+
+    XLSX.writeFile(workbook, 'Medicine_Upload_Template.xlsx');
+    showNotification('✅ Template downloaded successfully', 'success');
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      setUploadProgress({ total: 0, success: 0, failed: 0, errors: [] });
+      
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+          if (jsonData.length === 0) {
+            showNotification('❌ Excel file is empty', 'error');
+            return;
+          }
+
+          setUploadProgress({ total: jsonData.length, success: 0, failed: 0, errors: [] });
+
+          let successCount = 0;
+          let failedCount = 0;
+          const errors = [];
+
+          for (let i = 0; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            
+            try {
+              // Validate required fields
+              if (!row['Medicine Name*'] || !row['MRP*']) {
+                throw new Error('Medicine Name and MRP are required');
+              }
+
+              // Map Excel columns to database fields
+              const medicineData = {
+                name: row['Medicine Name*'],
+                generic_name: row['Generic Name'] || '',
+                category: row['Category'] || 'Tablet',
+                type: row['Type'] || 'Allopathy',
+                manufacturer: row['Manufacturer'] || '',
+                mrp: parseFloat(row['MRP*']) || 0,
+                purchase_price: parseFloat(row['Purchase Price']) || 0,
+                hsn_code: row['HSN Code'] || '',
+                gst_percentage: parseInt(row['GST %']) || 12,
+                reorder_level: parseInt(row['Reorder Level']) || 50,
+                requires_prescription: (row['Requires Prescription'] || '').toLowerCase() === 'yes',
+                description: row['Description'] || ''
+              };
+
+              const result = await medicinesAPI.create(medicineData);
+              
+              if (result.success) {
+                successCount++;
+                setMedicines(prev => [...prev, result.data]);
+              } else {
+                throw new Error(result.error || 'Failed to create medicine');
+              }
+            } catch (error) {
+              failedCount++;
+              errors.push(`Row ${i + 2}: ${row['Medicine Name*'] || 'Unknown'} - ${error.message}`);
+            }
+
+            setUploadProgress({
+              total: jsonData.length,
+              success: successCount,
+              failed: failedCount,
+              errors: errors
+            });
+          }
+
+          if (successCount > 0) {
+            showNotification(`✅ Successfully imported ${successCount} medicines`, 'success');
+          }
+          if (failedCount > 0) {
+            showNotification(`⚠️ ${failedCount} medicines failed to import. Check details.`, 'error');
+          }
+
+          // Keep upload progress visible for 10 seconds
+          setTimeout(() => setUploadProgress(null), 10000);
+          
+        } catch (error) {
+          showNotification('❌ Failed to parse Excel file: ' + error.message, 'error');
+          setUploadProgress(null);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      showNotification('❌ Failed to upload file: ' + error.message, 'error');
+      setUploadProgress(null);
+    }
+
+    // Reset file input
+    event.target.value = '';
+  };
 
   const exportToCSV = () => {
     const headers = ['Name', 'Generic Name', 'Category', 'Type', 'Manufacturer', 'MRP', 'Purchase Price', 'HSN Code', 'Requires Prescription'];
@@ -188,12 +336,33 @@ const handleSave = async (medicineData) => {
 
             <div className="flex items-center gap-3">
               <button
+                onClick={downloadTemplate}
+                className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                title="Download Excel Template"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Download Template
+              </button>
+
+              <label className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors cursor-pointer">
+                <Upload className="w-4 h-4" />
+                Upload Excel
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+
+              <button
                 onClick={exportToCSV}
                 className="flex items-center gap-2 px-4 py-2 bg-white text-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Export
               </button>
+
               <button
                 onClick={loadData}
                 disabled={loading}
@@ -202,11 +371,12 @@ const handleSave = async (medicineData) => {
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </button>
+
               <button
                 onClick={handleAdd}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors"
+                className="flex items-center gap-2 px-6 py-2 bg-white text-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors font-semibold"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
                 Add Medicine
               </button>
             </div>
@@ -225,67 +395,96 @@ const handleSave = async (medicineData) => {
               ) : (
                 <AlertCircle className="w-5 h-5 text-red-600" />
               )}
-              <span className={notification.type === 'success' ? 'text-green-800 font-medium' : 'text-red-800 font-medium'}>
+              <span className={notification.type === 'success' ? 'text-green-800' : 'text-red-800'}>
                 {notification.message}
               </span>
             </div>
-            <button onClick={() => setNotification(null)} className="text-gray-500">
-              <X className="w-4 h-4" />
+            <button onClick={() => setNotification(null)}>
+              <X className="w-5 h-5 text-gray-500" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {uploadProgress && (
+        <div className="max-w-7xl mx-auto px-4 mt-4">
+          <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-purple-200">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Upload Progress</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span>Total Records:</span>
+                <span className="font-semibold">{uploadProgress.total}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-green-600">Successfully Imported:</span>
+                <span className="font-semibold text-green-600">{uploadProgress.success}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-red-600">Failed:</span>
+                <span className="font-semibold text-red-600">{uploadProgress.failed}</span>
+              </div>
+              
+              {uploadProgress.errors.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-semibold text-red-600 mb-2">Errors:</h4>
+                  <div className="bg-red-50 p-3 rounded max-h-40 overflow-y-auto">
+                    {uploadProgress.errors.map((error, idx) => (
+                      <div key={idx} className="text-xs text-red-700 mb-1">{error}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-cyan-500">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Total Medicines</h3>
-              <div className="bg-cyan-100 p-2 rounded-lg">
-                <Pill className="w-5 h-5 text-cyan-600" />
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Medicines</p>
+                <p className="text-2xl font-bold text-cyan-600">{stats.total}</p>
               </div>
+              <Pill className="w-10 h-10 text-cyan-600 opacity-20" />
             </div>
-            <p className="text-3xl font-bold text-cyan-600">{stats.total}</p>
-            <p className="text-sm text-gray-500 mt-1">In database</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Categories</h3>
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <Filter className="w-5 h-5 text-blue-600" />
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Categories</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.categories}</p>
               </div>
+              <Filter className="w-10 h-10 text-blue-600 opacity-20" />
             </div>
-            <p className="text-3xl font-bold text-blue-600">{stats.categories}</p>
-            <p className="text-sm text-gray-500 mt-1">Drug categories</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Manufacturers</h3>
-              <div className="bg-purple-100 p-2 rounded-lg">
-                <Pill className="w-5 h-5 text-purple-600" />
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Manufacturers</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.manufacturers}</p>
               </div>
+              <div className="w-10 h-10 bg-purple-600 opacity-20 rounded-full" />
             </div>
-            <p className="text-3xl font-bold text-purple-600">{stats.manufacturers}</p>
-            <p className="text-sm text-gray-500 mt-1">Unique brands</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Rx Required</h3>
-              <div className="bg-orange-100 p-2 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-orange-600" />
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Prescription Required</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.prescription}</p>
               </div>
+              <AlertCircle className="w-10 h-10 text-orange-600 opacity-20" />
             </div>
-            <p className="text-3xl font-bold text-orange-600">{stats.prescription}</p>
-            <p className="text-sm text-gray-500 mt-1">Prescription needed</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1 relative">
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <div className="flex-1 min-w-[300px] relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
@@ -377,9 +576,9 @@ const handleSave = async (medicineData) => {
                         <td className="px-4 py-3 text-right text-gray-700">₹{parseFloat(medicine.purchase_price || 0).toFixed(2)}</td>
                         <td className="px-4 py-3 text-center">
                           {medicine.requires_prescription ? (
-                            <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">Yes</span>
+                            <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">Rx</span>
                           ) : (
-                            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">No</span>
+                            <span className="text-gray-400">-</span>
                           )}
                         </td>
                         <td className="px-4 py-3">
@@ -406,9 +605,9 @@ const handleSave = async (medicineData) => {
                 </table>
               </div>
 
-              <div className="mt-4 flex items-center justify-between border-t pt-4">
+              <div className="flex items-center justify-between mt-6 pt-4 border-t">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Show:</span>
+                  <span className="text-sm text-gray-600">Show</span>
                   <select
                     value={itemsPerPage}
                     onChange={(e) => {
@@ -422,13 +621,10 @@ const handleSave = async (medicineData) => {
                     <option value={50}>50</option>
                     <option value={100}>100</option>
                   </select>
-                  <span className="text-sm text-gray-600">per page</span>
+                  <span className="text-sm text-gray-600">entries</span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">
-                    Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredMedicines.length)} to {Math.min(currentPage * itemsPerPage, filteredMedicines.length)} of {filteredMedicines.length}
-                  </span>
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
@@ -463,9 +659,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
     category: 'Tablet',
     type: 'Allopathy',
     manufacturer: '',
-    company: '',
-    pack_size: '',
-    barcode: '',
     mrp: '',
     purchase_price: '',
     hsn_code: '',
@@ -499,7 +692,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Medicine Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Medicine Name <span className="text-red-500">*</span>
@@ -513,7 +705,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
                 />
               </div>
 
-              {/* Generic Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Generic Name
@@ -526,7 +717,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
                 />
               </div>
 
-              {/* Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Category
@@ -547,7 +737,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
                 </select>
               </div>
 
-              {/* Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Type
@@ -564,7 +753,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
                 </select>
               </div>
 
-              {/* Manufacturer */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Manufacturer
@@ -577,7 +765,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
                 />
               </div>
 
-              {/* MRP */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   MRP <span className="text-red-500">*</span>
@@ -592,7 +779,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
                 />
               </div>
 
-              {/* Purchase Price */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Purchase Price
@@ -606,7 +792,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
                 />
               </div>
 
-              {/* HSN Code */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   HSN Code
@@ -619,7 +804,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
                 />
               </div>
 
-              {/* GST % */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   GST %
@@ -637,7 +821,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
                 </select>
               </div>
 
-              {/* Reorder Level */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Reorder Level
@@ -651,7 +834,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
               </div>
             </div>
 
-            {/* Requires Prescription Checkbox */}
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -665,7 +847,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
               </label>
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
@@ -679,7 +860,6 @@ function MedicineForm({ medicine, onSave, onCancel }) {
               />
             </div>
 
-            {/* Buttons */}
             <div className="flex gap-4">
               <button
                 type="submit"
