@@ -1,8 +1,8 @@
-// Base API URL - Change this when deploying
-const API_BASE_URL = 'https://pharmacy-backend-3mwa.onrender.com/api';
+// API Configuration
+const API_BASE_URL = 'http://localhost:5000/api';
 
-// Helper function for API calls
-const apiCall = async (endpoint, options = {}) => {
+// Generic API request handler
+async function apiRequest(endpoint, options = {}) {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
@@ -20,317 +20,217 @@ const apiCall = async (endpoint, options = {}) => {
 
     return data;
   } catch (error) {
-    console.error(`API Error (${endpoint}):`, error);
-    return { success: false, error: error.message, data: [] };
+    console.error('API Error:', error);
+    throw error;
   }
-};
+}
 
-// ==================== MEDICINES API ====================
+// Medicines API
 export const medicinesAPI = {
   getAll: async () => {
-    try {
-      const result = await apiCall('/medicines');
-      return { success: result.success, data: result.data || [] };
-    } catch (error) {
-      console.error('Error fetching medicines:', error);
-      return { success: false, error: error.message, data: [] };
-    }
+    return await apiRequest('/medicines');
   },
 
-  create: async (medicine) => {
-    try {
-      const result = await apiCall('/medicines', {
-        method: 'POST',
-        body: JSON.stringify(medicine),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error creating medicine:', error);
-      return { success: false, error: error.message };
-    }
+  getById: async (id) => {
+    return await apiRequest(`/medicines/${id}`);
   },
 
-  add: async (medicine) => {
-    return await medicinesAPI.create(medicine);
+  create: async (medicineData) => {
+    return await apiRequest('/medicines', {
+      method: 'POST',
+      body: JSON.stringify(medicineData),
+    });
   },
 
-  update: async (id, medicine) => {
-    try {
-      const result = await apiCall(`/medicines/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(medicine),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error updating medicine:', error);
-      return { success: false, error: error.message };
-    }
+  update: async (id, medicineData) => {
+    return await apiRequest(`/medicines/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(medicineData),
+    });
   },
 
   delete: async (id) => {
-    try {
-      const result = await apiCall(`/medicines/${id}`, {
-        method: 'DELETE',
-      });
-      return { success: result.success };
-    } catch (error) {
-      console.error('Error deleting medicine:', error);
-      return { success: false, error: error.message };
-    }
-  }
+    return await apiRequest(`/medicines/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
-// ==================== STOCK API ====================
+// Stock API (Legacy - single items)
 export const stockAPI = {
   getAll: async () => {
-    try {
-      const result = await apiCall('/stock');
-      return { success: result.success, data: result.data || [] };
-    } catch (error) {
-      console.error('Error fetching stock:', error);
-      return { success: false, error: error.message, data: [] };
-    }
+    return await apiRequest('/stock');
   },
 
-  create: async (stock) => {
-    try {
-      const result = await apiCall('/stock', {
-        method: 'POST',
-        body: JSON.stringify(stock),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error creating stock:', error);
-      return { success: false, error: error.message };
-    }
+  create: async (stockData) => {
+    return await apiRequest('/stock', {
+      method: 'POST',
+      body: JSON.stringify(stockData),
+    });
   },
 
-  add: async (stock) => {
-    return await stockAPI.create(stock);
-  },
-
-  update: async (id, stock) => {
-    try {
-      const result = await apiCall(`/stock/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(stock),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error updating stock:', error);
-      return { success: false, error: error.message };
-    }
+  update: async (id, stockData) => {
+    return await apiRequest(`/stock/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(stockData),
+    });
   },
 
   delete: async (id) => {
-    try {
-      const result = await apiCall(`/stock/${id}`, {
-        method: 'DELETE',
-      });
-      return { success: result.success };
-    } catch (error) {
-      console.error('Error deleting stock:', error);
-      return { success: false, error: error.message };
-    }
-  }
+    return await apiRequest(`/stock/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
-// ==================== SALES API ====================
-// ==================== SALES API ====================
-export const salesAPI = {
+// Stock Invoices API (NEW - multi-item invoices)
+export const stockInvoicesAPI = {
+  // Get all invoices
   getAll: async () => {
-    try {
-      const result = await apiCall('/sales');
-      return { success: result.success, data: result.data || [] };
-    } catch (error) {
-      console.error('Error fetching sales:', error);
-      return { success: false, error: error.message, data: [] };
-    }
+    return await apiRequest('/stock/invoices');
   },
 
-  add: async (sale) => {
-    try {
-      const result = await apiCall('/sales', {
-        method: 'POST',
-        body: JSON.stringify(sale),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error adding sale:', error);
-      return { success: false, error: error.message };
-    }
+  // Get single invoice with items
+  getById: async (id) => {
+    return await apiRequest(`/stock/invoices/${id}`);
   },
 
+  // Create new invoice with multiple items
+  create: async (invoiceData) => {
+    return await apiRequest('/stock/invoices', {
+      method: 'POST',
+      body: JSON.stringify(invoiceData),
+    });
+  },
+
+  // Update invoice (payment status, notes)
+  update: async (id, invoiceData) => {
+    return await apiRequest(`/stock/invoices/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(invoiceData),
+    });
+  },
+
+  // Delete invoice and related stock
   delete: async (id) => {
-    try {
-      const result = await apiCall(`/sales/${id}`, {
-        method: 'DELETE',
-      });
-      return { success: result.success };
-    } catch (error) {
-      console.error('Error deleting sale:', error);
-      return { success: false, error: error.message };
-    }
-  }
+    return await apiRequest(`/stock/invoices/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
-// ==================== SUPPLIERS API ====================
+// Suppliers API
 export const suppliersAPI = {
   getAll: async () => {
-    try {
-      const result = await apiCall('/suppliers');
-      return { success: result.success, data: result.data || [] };
-    } catch (error) {
-      console.error('Error fetching suppliers:', error);
-      return { success: false, error: error.message, data: [] };
-    }
+    return await apiRequest('/suppliers');
   },
 
-  create: async (supplier) => {
-    try {
-      const result = await apiCall('/suppliers', {
-        method: 'POST',
-        body: JSON.stringify(supplier),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error creating supplier:', error);
-      return { success: false, error: error.message };
-    }
+  getById: async (id) => {
+    return await apiRequest(`/suppliers/${id}`);
   },
 
-  add: async (supplier) => {
-    return await suppliersAPI.create(supplier);
+  create: async (supplierData) => {
+    return await apiRequest('/suppliers', {
+      method: 'POST',
+      body: JSON.stringify(supplierData),
+    });
   },
 
-  update: async (id, supplier) => {
-    try {
-      const result = await apiCall(`/suppliers/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(supplier),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error updating supplier:', error);
-      return { success: false, error: error.message };
-    }
+  update: async (id, supplierData) => {
+    return await apiRequest(`/suppliers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(supplierData),
+    });
   },
 
   delete: async (id) => {
-    try {
-      const result = await apiCall(`/suppliers/${id}`, {
-        method: 'DELETE',
-      });
-      return { success: result.success };
-    } catch (error) {
-      console.error('Error deleting supplier:', error);
-      return { success: false, error: error.message };
-    }
-  }
+    return await apiRequest(`/suppliers/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
-// ==================== PAYMENTS API ====================
+// Sales API
+export const salesAPI = {
+  getAll: async () => {
+    return await apiRequest('/sales');
+  },
+
+  getById: async (id) => {
+    return await apiRequest(`/sales/${id}`);
+  },
+
+  create: async (saleData) => {
+    return await apiRequest('/sales', {
+      method: 'POST',
+      body: JSON.stringify(saleData),
+    });
+  },
+
+  delete: async (id) => {
+    return await apiRequest(`/sales/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Payments API
 export const paymentsAPI = {
   getAll: async () => {
-    try {
-      const result = await apiCall('/payments');
-      return { success: result.success, data: result.data || [] };
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      return { success: false, error: error.message, data: [] };
-    }
+    return await apiRequest('/payments');
   },
 
-  create: async (payment) => {
-    try {
-      const result = await apiCall('/payments', {
-        method: 'POST',
-        body: JSON.stringify(payment),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error creating payment:', error);
-      return { success: false, error: error.message };
-    }
+  create: async (paymentData) => {
+    return await apiRequest('/payments', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
   },
 
-  add: async (payment) => {
-    return await paymentsAPI.create(payment);
-  },
-
-  update: async (id, payment) => {
-    try {
-      const result = await apiCall(`/payments/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payment),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error updating payment:', error);
-      return { success: false, error: error.message };
-    }
+  update: async (id, paymentData) => {
+    return await apiRequest(`/payments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(paymentData),
+    });
   },
 
   delete: async (id) => {
-    try {
-      const result = await apiCall(`/payments/${id}`, {
-        method: 'DELETE',
-      });
-      return { success: result.success };
-    } catch (error) {
-      console.error('Error deleting payment:', error);
-      return { success: false, error: error.message };
-    }
-  }
+    return await apiRequest(`/payments/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
-// ==================== USERS API ====================
+// Users API
 export const usersAPI = {
   getAll: async () => {
-    try {
-      const result = await apiCall('/users');
-      return { success: result.success, data: result.data || [] };
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      return { success: false, error: error.message, data: [] };
-    }
+    return await apiRequest('/users');
   },
 
-  create: async (user) => {
-    try {
-      const result = await apiCall('/users/register', {
-        method: 'POST',
-        body: JSON.stringify(user),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error creating user:', error);
-      return { success: false, error: error.message };
-    }
+  create: async (userData) => {
+    return await apiRequest('/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
   },
 
-  update: async (id, user) => {
-    try {
-      const result = await apiCall(`/users/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(user),
-      });
-      return { success: result.success, data: result.data };
-    } catch (error) {
-      console.error('Error updating user:', error);
-      return { success: false, error: error.message };
-    }
+  update: async (id, userData) => {
+    return await apiRequest(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
   },
 
   delete: async (id) => {
-    try {
-      const result = await apiCall(`/users/${id}`, {
-        method: 'DELETE',
-      });
-      return { success: result.success };
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      return { success: false, error: error.message };
-    }
-  }
+    return await apiRequest(`/users/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  login: async (credentials) => {
+    return await apiRequest('/users/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  },
 };
