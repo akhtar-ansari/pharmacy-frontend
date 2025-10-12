@@ -3,6 +3,27 @@ import { Package, Plus, Upload, Eye, Trash2, RefreshCw, Calendar, DollarSign, Fi
 import { stockInvoicesAPI, suppliersAPI, medicinesAPI } from '../services/api';
 import * as XLSX from 'xlsx';
 
+// MediFlow Logo Component
+const MediFlowLogo = ({ size = 32 }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="pillGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0EA5E9" />
+        <stop offset="100%" stopColor="#06B6D4" />
+      </linearGradient>
+    </defs>
+    {/* Capsule/Pill Shape */}
+    <ellipse cx="35" cy="50" rx="25" ry="15" fill="url(#pillGradient)" opacity="0.9"/>
+    {/* Medical Cross */}
+    <rect x="30" y="45" width="10" height="3" fill="white"/>
+    <rect x="33" y="42" width="4" height="9" fill="white"/>
+    {/* Flow Lines */}
+    <path d="M 60 45 Q 70 40 80 45" stroke="#0EA5E9" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.8"/>
+    <path d="M 60 50 Q 70 50 80 50" stroke="#06B6D4" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.7"/>
+    <path d="M 60 55 Q 70 60 80 55" stroke="#10B981" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.6"/>
+  </svg>
+);
+
 export default function StockINApp({ appData, setAppData }) {
   const [view, setView] = useState('list'); // 'list' or 'form' or 'detail'
   const [invoices, setInvoices] = useState([]);
@@ -118,12 +139,16 @@ export default function StockINApp({ appData, setAppData }) {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="bg-white p-3 rounded-lg shadow-md">
-                <Package className="w-8 h-8 text-green-600" />
+              <div className="bg-white p-2 rounded-lg shadow-md">
+                <MediFlowLogo size={32} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Stock IN - Invoices</h1>
-                <p className="text-sm text-green-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl font-bold text-white">MediFlow</span>
+                  <span className="text-xs bg-white/20 px-2 py-1 rounded text-white">PMS</span>
+                </div>
+                <h1 className="text-lg font-semibold text-white">Stock IN - Invoices</h1>
+                <p className="text-xs text-green-100">
                   {loading ? '⏳ Loading...' : `${invoices.length} invoices`}
                 </p>
               </div>
@@ -595,7 +620,13 @@ function InvoiceForm({ suppliers, medicines, onSave, onCancel, showNotification 
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-2xl font-bold text-white">New Stock Invoice</h1>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl font-bold text-white">MediFlow</span>
+                  <span className="text-xs bg-white/20 px-2 py-1 rounded text-white">PMS</span>
+                </div>
+                <h1 className="text-lg font-semibold text-white">New Stock Invoice</h1>
+              </div>
             </div>
 
             <div className="flex gap-3">
@@ -871,8 +902,12 @@ function InvoiceDetail({ invoice, onBack, onDelete }) {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-white">Invoice Details</h1>
-                <p className="text-sm text-green-100">{invoice.invoice_number}</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl font-bold text-white">MediFlow</span>
+                  <span className="text-xs bg-white/20 px-2 py-1 rounded text-white">PMS</span>
+                </div>
+                <h1 className="text-lg font-semibold text-white">Invoice Details</h1>
+                <p className="text-xs text-green-100">{invoice.invoice_number}</p>
               </div>
             </div>
 

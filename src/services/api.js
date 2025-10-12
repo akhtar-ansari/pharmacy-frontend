@@ -4,9 +4,13 @@ const API_BASE_URL = 'http://localhost:5000/api';
 // Generic API request handler
 async function apiRequest(endpoint, options = {}) {
   try {
+    // Get auth token from localStorage
+    const token = localStorage.getItem('token');
+    
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -15,6 +19,12 @@ async function apiRequest(endpoint, options = {}) {
     const data = await response.json();
 
     if (!response.ok) {
+      // If unauthorized, clear token and redirect to login
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
       throw new Error(data.error || 'API request failed');
     }
 
@@ -231,6 +241,59 @@ export const usersAPI = {
     return await apiRequest('/users/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
+    });
+  },
+};
+
+// Authentication API (NEW)
+export const authAPI = {
+  login: async (username, password) => {
+    return await apiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+  },
+
+  me: async () => {
+    return await apiRequest('/auth/me');
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    return await apiRequest('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  // Admin only
+  getAllUsers: async () => {
+    return await apiRequest('/auth');
+  },
+
+  createUser: async (userData) => {
+    return await apiRequest('/auth', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  },
+
+  updateUser: async (id, userData) => {
+    return await apiRequest(`/auth/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  },
+
+  resetPassword: async (id, newPassword) => {
+    return await apiRequest(`/auth/${id}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ newPassword }),
+    });
+  },
+
+  deleteUser: async (id) => {
+    return await apiRequest(`/auth/${id}`, {
+      method: 'DELETE',
     });
   },
 };
