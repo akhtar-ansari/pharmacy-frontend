@@ -243,7 +243,7 @@ export function getUserTier() {
   return localStorage.getItem('pms_subscription_tier') || 'basic';
 }
 
-export default {
+const tierAccessAPI = {
   PMS_MODULES,
   canAccessModule,
   getAccessibleModules,
@@ -254,3 +254,5 @@ export default {
   setUserTier,
   getUserTier
 };
+
+export default tierAccessAPI;
