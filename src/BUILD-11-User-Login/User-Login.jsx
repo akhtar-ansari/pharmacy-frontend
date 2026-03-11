@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, Trash2, Eye, EyeOff, Shield, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, Shield, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { authAPI } from '../services/api';
 
 // Get current user from localStorage
