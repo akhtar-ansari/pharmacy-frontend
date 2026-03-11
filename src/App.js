@@ -4,10 +4,8 @@ import {
   TrendingUp, BarChart3, Building2, DollarSign, Menu, X, Home, 
   ScanLine, Users, LogOut
 } from 'lucide-react';
-
 // Import Login component
 import Login from './components/Login';
-
 // Import all 12 BUILD modules
 import MedicineDatabaseApp from './BUILD-1-Medicine-Database/medicine-database';
 import StockInApp from './BUILD-2-Stock-IN/stock-in-system';
@@ -22,6 +20,8 @@ import BarcodeSystemApp from './BUILD-10-Barcode-System/Barcode-System';
 import DashboardApp from './BUILD-12-Dashboard/Dashboard';
 import UserManagementApp from './BUILD-11-User-Login/User-Login';
 
+// Import utilities
+import { initKeyboardShortcuts, registerHandlers } from './utils/keyboardShortcuts';
 // Initial shared data state
 const INITIAL_STATE = {
   medicines: [
