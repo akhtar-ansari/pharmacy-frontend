@@ -35,6 +35,7 @@ export default function StockINApp({ appData, setAppData }) {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -352,8 +353,7 @@ function InvoiceForm({ suppliers, medicines, onSave, onCancel, showNotification 
     }
   ]);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [saving, setSaving] = useState(false);
+    const [saving, setSaving] = useState(false);
 
   // Helper function to parse Excel dates
   const parseExcelDate = (excelDate) => {
