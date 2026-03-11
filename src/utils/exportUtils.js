@@ -338,7 +338,7 @@ export function exportMedicinesList(medicinesData, format = 'excel', companyInfo
   }
 }
 
-export default {
+const exportAPI = {
   exportToExcel,
   exportToPDF,
   exportStockReport,
@@ -347,3 +347,5 @@ export default {
   exportPaymentReport,
   exportMedicinesList
 };
+
+export default exportAPI;
