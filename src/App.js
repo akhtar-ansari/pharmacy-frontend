@@ -228,6 +228,13 @@ export default function App() {
             </button>
           )}
         </div>
+            {/* Footer - ADD THIS */}
+        {sidebarOpen && (
+          <div className="px-4 py-2 border-t border-gray-700 text-center">
+            <p className="text-xs text-gray-500">Powered by</p>
+            <p className="text-xs text-blue-400 font-semibold">Arwa Enterprises</p>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
