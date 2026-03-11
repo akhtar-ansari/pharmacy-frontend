@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Camera, Printer, Search, Download, Settings, Zap, Package, ScanLine, QrCode, Edit2, Save, X, CheckCircle, AlertCircle, Grid, List, Hash, RefreshCw } from 'lucide-react';
+import { Printer, Search, Settings, Zap, Package, ScanLine, Edit2, Save, X, CheckCircle, AlertCircle, Grid, List, RefreshCw } from 'lucide-react';
 import { medicinesAPI, stockAPI } from '../services/api';
 
 // ==================== MAIN APP COMPONENT ====================
