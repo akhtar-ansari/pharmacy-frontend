@@ -22,6 +22,7 @@ import UserManagementApp from './BUILD-11-User-Login/User-Login';
 
 // Import utilities
 import { initKeyboardShortcuts, registerHandlers } from './utils/keyboardShortcuts';
+
 // Initial shared data state
 const INITIAL_STATE = {
   medicines: [
@@ -62,6 +63,26 @@ export default function App() {
     }
     
     setLoading(false);
+  }, []);
+
+  // Initialize keyboard shortcuts
+  useEffect(() => {
+    initKeyboardShortcuts();
+    
+    // Register custom handlers for navigation
+    registerHandlers({
+      'dashboard': () => setActiveModule('dashboard'),
+      'medicines': () => setActiveModule('medicines'),
+      'pos': () => setActiveModule('pos'),
+      'new-sale': () => setActiveModule('pos'),
+      'stock-in': () => setActiveModule('stock-in'),
+      'reports': () => setActiveModule('sales'),
+      'add-medicine': () => setActiveModule('medicines'),
+      'search': () => document.querySelector('input[type="search"], input[type="text"]')?.focus(),
+      'logout': () => handleLogout(),
+    });
+
+    console.log('⌨️ Keyboard shortcuts ready! Press F1 for help.');
   }, []);
 
   const handleLoginSuccess = (userData) => {
