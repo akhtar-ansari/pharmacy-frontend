@@ -54,6 +54,7 @@ export default function UserManagementApp() {
     if (currentUser && currentUser.role === 'admin') {
       loadUsers();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadUsers = async () => {
