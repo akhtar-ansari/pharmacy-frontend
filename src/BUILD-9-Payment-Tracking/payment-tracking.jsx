@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DollarSign, TrendingUp, AlertCircle, Calendar, Search, Plus, Edit2, Trash2, X, CheckCircle, RefreshCw, Download, Filter } from 'lucide-react';
+import { DollarSign, TrendingUp, AlertCircle, Calendar, Search, Plus, Edit2, Trash2, X, CheckCircle, RefreshCw, Download } from 'lucide-react';
 import { suppliersAPI } from '../services/api';
 
 // Temporary mock API until backend is ready
