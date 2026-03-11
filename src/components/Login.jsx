@@ -98,13 +98,11 @@ export default function Login({ onLoginSuccess }) {
           </div>
           
           <div className="mb-2">
-            <span className="text-3xl font-bold text-gray-800">Medi</span>
-            <span className="text-3xl font-bold text-blue-600">Flow</span>
-            <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-semibold">PMS</span>
-          </div>
-          
-          <p className="text-gray-600 text-sm">Pharmacy Management System</p>
-          <p className="text-gray-400 text-xs mt-1">Sign in to continue</p>
+  <span className="text-2xl font-bold text-gray-800">Pharmacy Management</span>
+</div>
+
+<p className="text-gray-600 text-sm">Powered by Arwa Enterprises</p>
+<p className="text-gray-400 text-xs mt-1">Sign in to continue</p>
         </div>
 
         {/* Error Message */}
@@ -201,12 +199,12 @@ export default function Login({ onLoginSuccess }) {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-xs text-gray-500">
-            © 2025 Arwa Enterprises
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Powered by MediFlow PMS
-          </p>
+  <p className="text-xs text-gray-500">
+    © 2026 Arwa Enterprises
+  </p>
+  <p className="text-xs text-gray-400 mt-1">
+    Pharmacy Management System
+  </p>
           <p className="text-xs text-gray-400 mt-2">
             Need help? Contact: connect.arwaenterprises@gmail.com
           </p>
