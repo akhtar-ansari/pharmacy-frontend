@@ -231,7 +231,7 @@ export function useClientInfo() {
   return getClientInfo();
 }
 
-export default {
+const clientBrandingAPI = {
   setClientInfo,
   getClientInfo,
   getClientId,
@@ -246,3 +246,5 @@ export default {
   getExportBranding,
   useClientInfo
 };
+
+export default clientBrandingAPI;
