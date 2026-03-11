@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://pharmacy-backend-3mwa.onrender.com/api';
 
 // Generic API request handler
 async function apiRequest(endpoint, options = {}) {
