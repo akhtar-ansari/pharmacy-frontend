@@ -51,11 +51,16 @@ export default function App() {
     const savedUser = localStorage.getItem('user');
 
     if (token && savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        setIsAuthenticated(true);
-      } catch (error) {
+  try {
+    const userData = JSON.parse(savedUser);
+    setUser(userData);
+    setIsAuthenticated(true);
+    
+    // Set default pharmacy name (will be replaced after Arwa integration)
+    if (!localStorage.getItem('pms_client_name')) {
+      localStorage.setItem('pms_client_name', 'Al Naeima Pharmacy');
+    }
+  } catch (error) {
         // Invalid data, clear storage
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -155,9 +160,19 @@ export default function App() {
             {sidebarOpen && (
               <div className="ml-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-base font-bold text-white">Medi</span>
-                  <span className="text-base font-bold text-blue-400">Flow</span>
-                  <span className="text-xs bg-blue-600 px-1.5 py-0.5 rounded text-white">PMS</span>
+                  <img 
+                    id="company-logo" 
+                    src={localStorage.getItem('pms_client_logo') || ''} 
+                    alt="" 
+                    style={{ 
+                      height: '28px', 
+                      display: localStorage.getItem('pms_client_logo') ? 'block' : 'none',
+                      borderRadius: '4px'
+                    }}
+                  />
+                  <span id="company-name" className="text-base font-bold text-white">
+                    {localStorage.getItem('pms_client_name') || 'Pharmacy'}
+                  </span>
                 </div>
                 <p className="text-xs text-gray-400">Pharmacy Management</p>
               </div>
