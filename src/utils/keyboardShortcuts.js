@@ -334,7 +334,7 @@ export function getAllShortcuts() {
   return { ...DEFAULT_SHORTCUTS };
 }
 
-export default {
+const keyboardShortcutsAPI = {
   initKeyboardShortcuts,
   cleanupKeyboardShortcuts,
   registerHandler,
@@ -344,3 +344,5 @@ export default {
   getAllShortcuts,
   showShortcutsHelp
 };
+
+export default keyboardShortcutsAPI;
