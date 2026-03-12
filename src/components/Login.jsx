@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, AlertCircle, Eye, EyeOff, Building2 } from 'lucide-react';
 import { authAPI } from '../services/api';
 
 // MediFlow Logo Component
@@ -25,6 +25,7 @@ const MediFlowLogo = ({ size = 48 }) => (
 
 export default function Login({ onLoginSuccess }) {
   const [formData, setFormData] = useState({
+    clientCode: '',
     username: '',
     password: ''
   });
@@ -37,10 +38,10 @@ export default function Login({ onLoginSuccess }) {
     setError('');
     setLoading(true);
 
-    console.log('🔐 Attempting login...', formData.username);
+    console.log('🔐 Attempting login...', formData.clientCode, formData.username);
 
     try {
-      const result = await authAPI.login(formData.username, formData.password);
+      const result = await authAPI.login(formData.clientCode, formData.username, formData.password);
       
       console.log('📥 Login response:', result);
 
@@ -48,10 +49,22 @@ export default function Login({ onLoginSuccess }) {
         console.log('✅ Login successful!');
         console.log('💾 Saving token:', result.token);
         console.log('👤 User data:', result.user);
+        console.log('🏢 Client data:', result.client);
         
         // Save token and user data
         localStorage.setItem('token', result.token);
         localStorage.setItem('user', JSON.stringify(result.user));
+        
+        // Save client data
+        if (result.client) {
+          localStorage.setItem('pms_client_id', result.client.id);
+          localStorage.setItem('pms_client_code', result.client.code);
+          localStorage.setItem('pms_client_name', result.client.name);
+          if (result.client.logo) {
+            localStorage.setItem('pms_client_logo', result.client.logo);
+          }
+          localStorage.setItem('pms_client_tier', result.client.tier || 'basic');
+        }
         
         console.log('📞 Calling onLoginSuccess...');
         
@@ -72,11 +85,12 @@ export default function Login({ onLoginSuccess }) {
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: name === 'clientCode' ? value.toUpperCase() : value
     });
-    setError(''); // Clear error when user types
+    setError('');
   };
 
   return (
@@ -98,11 +112,21 @@ export default function Login({ onLoginSuccess }) {
           </div>
           
           <div className="mb-2">
-  <span className="text-2xl font-bold text-gray-800">Pharmacy Management</span>
-</div>
+            <span className="text-2xl font-bold text-gray-800">Pharmacy Management</span>
+          </div>
 
-<p className="text-gray-600 text-sm">Powered by Arwa Enterprises</p>
-<p className="text-gray-400 text-xs mt-1">Sign in to continue</p>
+          <p className="text-gray-600 text-sm">
+            Powered by{' '}
+            <a 
+              href="https://arwaenterprises.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              Arwa Enterprises
+            </a>
+          </p>
+          <p className="text-gray-400 text-xs mt-1">Sign in to continue</p>
         </div>
 
         {/* Error Message */}
@@ -117,7 +141,31 @@ export default function Login({ onLoginSuccess }) {
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Client Code Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Client Code
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Building2 className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                name="clientCode"
+                value={formData.clientCode}
+                onChange={handleChange}
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="AE1, AE2..."
+                required
+                maxLength={10}
+                disabled={loading}
+              />
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Enter your company code</p>
+          </div>
+
           {/* Username Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -199,12 +247,20 @@ export default function Login({ onLoginSuccess }) {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-  <p className="text-xs text-gray-500">
-    © 2026 Arwa Enterprises
-  </p>
-  <p className="text-xs text-gray-400 mt-1">
-    Pharmacy Management System
-  </p>
+          <p className="text-xs text-gray-500">
+            © 2026{' '}
+            <a 
+              href="https://arwaenterprises.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              Arwa Enterprises
+            </a>
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Pharmacy Management System
+          </p>
           <p className="text-xs text-gray-400 mt-2">
             Need help? Contact: connect.arwaenterprises@gmail.com
           </p>
