@@ -247,10 +247,10 @@ export const usersAPI = {
 
 // Authentication API (NEW)
 export const authAPI = {
-  login: async (username, password) => {
+  login: async (clientCode, username, password) => {
     return await apiRequest('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ clientCode, username, password }),
     });
   },
 
