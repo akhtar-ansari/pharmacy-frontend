@@ -257,7 +257,7 @@ export default function DashboardApp({ appData, setAppData, onNavigate }) {
           />
           <MetricCard
             title="Today's Revenue"
-            value={`₹{stats.todayRevenue.toFixed(0)}`}
+            value={`₹${stats.todayRevenue.toFixed(0)}`}
             icon={DollarSign}
             color="bg-green-600"
             onClick={() => onNavigate && onNavigate('sales')}
