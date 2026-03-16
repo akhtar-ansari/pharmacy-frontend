@@ -18,7 +18,7 @@
  * ============================================================================
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // Icon imports from lucide-react
 import { 
@@ -28,7 +28,6 @@ import {
   Eye,              // View invoice button
   Trash2,           // Delete button
   RefreshCw,        // Refresh/loading spinner
-  Calendar,         // Date icon in stats
   DollarSign,       // Amount icon in stats
   FileText,         // Invoice/document icon
   X,                // Close/remove button
@@ -48,21 +47,6 @@ import * as XLSX from 'xlsx';
 
 // Import the universal barcode parser utility
 import { parseUniversalBarcode } from '../utils/barcodeParser';
-
-
-// ============================================================================
-// CONSTANTS - Configuration values used throughout the component
-// ============================================================================
-
-// Debounce delay for medicine search (milliseconds)
-// Prevents excessive API calls while user is typing
-const SEARCH_DEBOUNCE_MS = 300;
-
-// Maximum items to show in scrollable area before virtualization kicks in
-const MAX_VISIBLE_ITEMS = 20;
-
-// Maximum search results to fetch from database
-const MAX_SEARCH_RESULTS = 20;
 
 // Invoice status options
 const INVOICE_STATUS = {
