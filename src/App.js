@@ -105,25 +105,53 @@ export default function App() {
     }
   };
 
-  // Role-based module access
-  const getAccessibleModules = (userRole) => {
-    const allModules = [
-      { id: 'dashboard', label: 'Dashboard', icon: Home, roles: ['admin', 'pharmacist', 'cashier'] },
-      { id: 'medicines', label: 'Medicine Database', icon: Pill, roles: ['admin', 'pharmacist'] },
-      { id: 'stock-in', label: 'Stock IN', icon: ShoppingBag, roles: ['admin', 'pharmacist'] },
-      { id: 'pos', label: 'POS / Billing', icon: ShoppingCart, roles: ['admin', 'pharmacist', 'cashier'] },
-      { id: 'expiry', label: 'Expiry Alerts', icon: AlertTriangle, roles: ['admin', 'pharmacist'] },
-      { id: 'reorder', label: 'Reorder Alerts', icon: Package, roles: ['admin', 'pharmacist'] },
-      { id: 'sales', label: 'Sales Reports', icon: TrendingUp, roles: ['admin'] },
-      { id: 'insights', label: 'Business Insights', icon: BarChart3, roles: ['admin'] },
-      { id: 'suppliers', label: 'Suppliers', icon: Building2, roles: ['admin', 'pharmacist'] },
-      { id: 'payments', label: 'Payments', icon: DollarSign, roles: ['admin'] },
-      { id: 'barcode', label: 'Barcode System', icon: ScanLine, roles: ['admin', 'pharmacist', 'cashier'] },
-      { id: 'users', label: 'User Management', icon: Users, roles: ['admin'] },
-    ];
+  // Tier + Role based module access
+const getAccessibleModules = () => {
+  // Get tier from localStorage (set during login)
+  const tier = localStorage.getItem('pms_client_tier') || 'basic';
+  const userRole = user?.role || 'pharmacist';
+  
+  // Normalize role: treat super_admin as admin
+  const normalizedRole = (userRole === 'super_admin') ? 'admin' : userRole;
 
-    return allModules.filter(module => module.roles.includes(userRole));
-  };
+  // All modules with tier requirements
+  const allModules = [
+    // Basic tier (5 modules)
+    { id: 'dashboard', label: 'Dashboard', icon: Home, tier: 'basic', adminOnly: false },
+    { id: 'medicines', label: 'Medicine Database', icon: Pill, tier: 'basic', adminOnly: false },
+    { id: 'stock-in', label: 'Stock IN', icon: ShoppingBag, tier: 'basic', adminOnly: false },
+    { id: 'pos', label: 'POS / Billing', icon: ShoppingCart, tier: 'basic', adminOnly: false },
+    { id: 'suppliers', label: 'Suppliers', icon: Building2, tier: 'basic', adminOnly: false },
+    
+    // Standard tier (adds 4 modules)
+    { id: 'expiry', label: 'Expiry Alerts', icon: AlertTriangle, tier: 'standard', adminOnly: false },
+    { id: 'reorder', label: 'Reorder Alerts', icon: Package, tier: 'standard', adminOnly: false },
+    { id: 'payments', label: 'Payments', icon: DollarSign, tier: 'standard', adminOnly: false },
+    { id: 'sales', label: 'Sales Reports', icon: TrendingUp, tier: 'standard', adminOnly: false },
+    
+    // Premium tier (adds 3 modules)
+    { id: 'insights', label: 'Business Insights', icon: BarChart3, tier: 'premium', adminOnly: false },
+    { id: 'barcode', label: 'Barcode System', icon: ScanLine, tier: 'premium', adminOnly: false },
+    { id: 'users', label: 'User Management', icon: Users, tier: 'premium', adminOnly: true },
+  ];
+
+  // Tier hierarchy
+  const tierLevel = { basic: 1, standard: 2, premium: 3 };
+  const userTierLevel = tierLevel[tier] || 1;
+
+  // Filter by tier first, then by role
+  return allModules.filter(module => {
+    const moduleTierLevel = tierLevel[module.tier] || 1;
+    
+    // Check tier access
+    if (userTierLevel < moduleTierLevel) return false;
+    
+    // Check role access (adminOnly modules)
+    if (module.adminOnly && normalizedRole !== 'admin') return false;
+    
+    return true;
+  });
+};
 
   // Show loading spinner
   if (loading) {
@@ -143,7 +171,7 @@ export default function App() {
   }
 
   // Get accessible modules based on user role
-  const menuItems = getAccessibleModules(user?.role || 'cashier');
+  const menuItems = getAccessibleModules();
 
   return (
     <div className="flex h-screen bg-gray-50">
