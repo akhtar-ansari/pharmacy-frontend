@@ -677,8 +677,16 @@ function InvoiceForm({ suppliers, medicines, existingInvoice, onSave, onCancel, 
   });
 
   // Array of invoice line items
-  // Each item: { medicine_id, medicine_name, quantity, batch_number, expiry_date, manufacturing_date, serial_number, purchase_price, gtin, barcode_type }
-  const [items, setItems] = useState(existingInvoice?.items || []);
+// Map existing items to include medicine_name from nested medicines object
+const [items, setItems] = useState(() => {
+  if (existingInvoice?.items && existingInvoice.items.length > 0) {
+    return existingInvoice.items.map(item => ({
+      ...item,
+      medicine_name: item.medicine_name || item.medicines?.name || 'Unknown'
+    }));
+  }
+  return [];
+});
 
   // Scanner/search input field value
   const [scanInput, setScanInput] = useState('');
