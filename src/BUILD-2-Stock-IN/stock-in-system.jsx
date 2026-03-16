@@ -753,10 +753,11 @@ const [items, setItems] = useState(() => {
     const trimmedValue = value.trim();
     
     // GS1 Digital Link URL - process immediately on paste/scan
-    if (trimmedValue.startsWith('http') || trimmedValue.includes('go.gs1.org')) {
-      processBarcode(trimmedValue);
-      return;
-    }
+if (trimmedValue.startsWith('http') || trimmedValue.includes('go.gs1.org')) {
+  processBarcode(trimmedValue);
+  setScanInput('');  // Clear input immediately
+  return;
+}
     
     // Pure numeric - could be EAN or GS1 numeric
     if (/^\d+$/.test(trimmedValue) && trimmedValue.length >= 8) {
@@ -791,8 +792,9 @@ const [items, setItems] = useState(() => {
   const parsed = parseUniversalBarcode(barcodeData);
   
   console.log('Parsed:', parsed);
+console.log('parsed.gtin value:', parsed?.gtin);
     
-    if (!parsed) {
+if (!parsed) {
       showNotification('⚠️ Could not parse barcode', 'error');
       setScanInput('');
       return;
