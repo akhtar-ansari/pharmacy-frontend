@@ -206,15 +206,31 @@ export default function StockINApp({ appData, setAppData }) {
    * handleEditInvoice - Opens the form to edit an existing draft invoice
    * @param {object} invoice - Invoice object to edit
    */
-  const handleEditInvoice = (invoice) => {
-    // Only allow editing draft invoices
-    if (invoice.status === INVOICE_STATUS.APPROVED) {
-      showNotification('⚠️ Cannot edit approved invoice', 'error');
-      return;
+  /**
+ * handleEditInvoice - Opens the form to edit an existing draft invoice
+ * Fetches full invoice data including items before opening form
+ * @param {object} invoice - Invoice object to edit
+ */
+const handleEditInvoice = async (invoice) => {
+  // Only allow editing draft invoices
+  if (invoice.status === INVOICE_STATUS.APPROVED) {
+    showNotification('⚠️ Cannot edit approved invoice', 'error');
+    return;
+  }
+  
+  try {
+    // Fetch full invoice with items
+    const result = await stockInvoicesAPI.getById(invoice.id);
+    if (result.success && result.data) {
+      setSelectedInvoice(result.data);
+      setView('form');
+    } else {
+      showNotification('❌ Failed to load invoice details', 'error');
     }
-    setSelectedInvoice(invoice);
-    setView('form');
-  };
+  } catch (error) {
+    showNotification('❌ Error loading invoice: ' + error.message, 'error');
+  }
+};;
 
   // ----------------------------------------
   // CRUD OPERATIONS
