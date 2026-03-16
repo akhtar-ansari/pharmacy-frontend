@@ -783,7 +783,7 @@ const [items, setItems] = useState(() => {
    * processBarcode - Parses barcode and adds item to invoice
    * @param {string} barcodeData - Raw barcode string (GS1 URL, EAN, etc.)
    */
-  const processBarcode = (barcodeData) => {
+  const processBarcode = async (barcodeData) => {
   console.log('=== BARCODE DEBUG ===');
   console.log('Input:', barcodeData);
   
