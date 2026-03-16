@@ -784,8 +784,13 @@ const [items, setItems] = useState(() => {
    * @param {string} barcodeData - Raw barcode string (GS1 URL, EAN, etc.)
    */
   const processBarcode = (barcodeData) => {
-    // Parse the barcode using our universal parser
-    const parsed = parseUniversalBarcode(barcodeData);
+  console.log('=== BARCODE DEBUG ===');
+  console.log('Input:', barcodeData);
+  
+  // Parse the barcode using our universal parser
+  const parsed = parseUniversalBarcode(barcodeData);
+  
+  console.log('Parsed:', parsed);
     
     if (!parsed) {
       showNotification('⚠️ Could not parse barcode', 'error');
