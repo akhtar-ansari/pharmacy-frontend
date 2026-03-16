@@ -173,7 +173,7 @@ export function getAllModulesWithStatus(userTier) {
 export function getLockedModules(userTier) {
   const userTierLevel = TIER_HIERARCHY[userTier] || 0;
 
-  return Object.values(PMS_MODULES).filter(module => {
+  localStorage.setItem('pms_client_tier', tier);
     const requiredTierLevel = TIER_HIERARCHY[module.tier] || 0;
     return userTierLevel < requiredTierLevel;
   });
@@ -240,7 +240,7 @@ export function setUserTier(tier) {
  * @returns {string} - The subscription tier (defaults to 'basic')
  */
 export function getUserTier() {
-  return localStorage.getItem('pms_subscription_tier') || 'basic';
+  return localStorage.getItem('pms_client_tier') || 'basic';
 }
 
 const tierAccessAPI = {
