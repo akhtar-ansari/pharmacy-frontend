@@ -802,12 +802,64 @@ const [items, setItems] = useState(() => {
     let medicine = null;
     
     if (parsed.gtin) {
+      console.log('Searching for GTIN:', parsed.gtin);
+      
       // Search by GTIN (check both gtin and barcode fields)
       medicine = medicines.find(m => 
         m.gtin === parsed.gtin || 
         m.barcode === parsed.gtin ||
         m.barcode === parsed.gtin.replace(/^0+/, '') // Try without leading zeros
       );
+      
+      console.log('Medicine found:', medicine);
+    }
+    
+    // If medicine not found, handle based on barcode type
+    if (!medicine) {
+      if (parsed.type === 'gs1') {
+        // GS1 barcode: Auto-create new medicine
+        console.log('GS1 barcode - Auto-creating medicine...');
+        
+        try {
+          const newMedicineData = {
+            name: `Unknown - ${parsed.gtin}`,
+            gtin: parsed.gtin,
+            barcode: parsed.gtin,
+            category: 'Uncategorized',
+            type: 'Allopathy',
+            purchase_price: 0,
+            mrp: 0,
+            description: 'Auto-created from GS1 barcode'
+          };
+          
+          const result = await medicinesAPI.create(newMedicineData);
+          
+          if (result.success && result.data) {
+            medicine = result.data;
+            // Add to local medicines array for future lookups
+            medicines.push(medicine);
+            showNotification(`✅ New medicine created: ${medicine.name}`, 'success');
+            console.log('Medicine created:', medicine);
+          } else {
+            showNotification('❌ Failed to create medicine', 'error');
+            setScanInput('');
+            scanInputRef.current?.focus();
+            return;
+          }
+        } catch (error) {
+          console.error('Error creating medicine:', error);
+          showNotification('❌ Error creating medicine: ' + error.message, 'error');
+          setScanInput('');
+          scanInputRef.current?.focus();
+          return;
+        }
+      } else {
+        // EAN barcode: Reject - medicine must exist
+        showNotification(`⚠️ Medicine not found for barcode: ${parsed.gtin || parsed.barcode}`, 'error');
+        setScanInput('');
+        scanInputRef.current?.focus();
+        return;
+      }
     }
     
     if (!medicine && parsed.type === 'ean') {
