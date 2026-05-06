@@ -38,23 +38,14 @@ export default function Login({ onLoginSuccess }) {
     setError('');
     setLoading(true);
 
-    console.log('🔐 Attempting login...', formData.clientCode, formData.username);
-
     try {
       const result = await authAPI.login(formData.clientCode, formData.username, formData.password);
-      
-      console.log('📥 Login response:', result);
 
       if (result.success) {
-        console.log('✅ Login successful!');
-        console.log('💾 Saving token:', result.token);
-        console.log('👤 User data:', result.user);
-        console.log('🏢 Client data:', result.client);
-        
         // Save token and user data
         localStorage.setItem('token', result.token);
         localStorage.setItem('user', JSON.stringify(result.user));
-        
+
         // Save client data
         if (result.client) {
           localStorage.setItem('pms_client_id', result.client.id);
@@ -65,19 +56,12 @@ export default function Login({ onLoginSuccess }) {
           }
           localStorage.setItem('pms_client_tier', result.client.tier || 'basic');
         }
-        
-        console.log('📞 Calling onLoginSuccess...');
-        
-        // Call success callback
+
         onLoginSuccess(result.user);
-        
-        console.log('✅ Login process complete!');
       } else {
-        console.log('❌ Login failed:', result.error);
         setError(result.error || 'Login failed');
       }
     } catch (err) {
-      console.error('💥 Login error:', err);
       setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);

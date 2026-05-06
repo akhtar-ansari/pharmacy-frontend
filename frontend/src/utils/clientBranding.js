@@ -199,12 +199,17 @@ export function displaySubscriptionWarning() {
       color: ${status.isActive ? '#92400E' : '#991B1B'};
       border-bottom: 1px solid ${status.isActive ? '#F59E0B' : '#EF4444'};
     `;
-    warningDiv.innerHTML = `
-      <strong>${status.isActive ? '⚠️' : '🚫'}</strong> ${status.message}
-      <a href="tel:+917021229209" style="margin-left: 10px; color: inherit; text-decoration: underline;">
-        Call Now
-      </a>
-    `;
+    const icon = document.createElement('strong');
+    icon.textContent = status.isActive ? '⚠️' : '🚫';
+    const msgSpan = document.createElement('span');
+    msgSpan.textContent = ' ' + status.message + ' ';
+    const callLink = document.createElement('a');
+    callLink.href = 'tel:+917021229209';
+    callLink.style.cssText = 'margin-left: 10px; color: inherit; text-decoration: underline;';
+    callLink.textContent = 'Call Now';
+    warningDiv.appendChild(icon);
+    warningDiv.appendChild(msgSpan);
+    warningDiv.appendChild(callLink);
 
     document.body.prepend(warningDiv);
   }

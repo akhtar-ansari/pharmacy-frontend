@@ -92,38 +92,21 @@ export default function UserManagementApp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('🔍 Form Data:', formData);
-    console.log('📝 Editing User?', editingUser ? 'YES' : 'NO');
-
     try {
       if (editingUser) {
-        // Update user - exclude password field
         const { password, ...updateData } = formData;
-        console.log('📤 Sending UPDATE:', updateData);
-        
         const result = await authAPI.updateUser(editingUser.id, updateData);
-        
         if (result.success) {
           showNotification('User updated successfully!');
           loadUsers();
           resetForm();
         }
       } else {
-        // Create new user - require password
-        console.log('🔐 Password value:', formData.password);
-        console.log('🔐 Password length:', formData.password?.length);
-        
         if (!formData.password || formData.password.length < 6) {
           showNotification('Password must be at least 6 characters', 'error');
           return;
         }
-
-        console.log('📤 Sending CREATE:', formData);
-        
         const result = await authAPI.createUser(formData);
-        
-        console.log('✅ Result:', result);
-        
         if (result.success) {
           showNotification('User created successfully!');
           loadUsers();
@@ -131,7 +114,6 @@ export default function UserManagementApp() {
         }
       }
     } catch (error) {
-      console.error('❌ Error:', error);
       showNotification(error.message || 'Operation failed', 'error');
     }
   };

@@ -173,7 +173,7 @@ export function getAllModulesWithStatus(userTier) {
 export function getLockedModules(userTier) {
   const userTierLevel = TIER_HIERARCHY[userTier] || 0;
 
-  localStorage.setItem('pms_client_tier', tier);
+  return Object.values(PMS_MODULES).filter(module => {
     const requiredTierLevel = TIER_HIERARCHY[module.tier] || 0;
     return userTierLevel < requiredTierLevel;
   });
