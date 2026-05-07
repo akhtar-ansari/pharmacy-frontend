@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://mediflow.arwaenterprises.com',
   'https://pharmacy-frontend-zeta.vercel.app',
   'https://pharmacy-frontend-bnhbxphxq-akhtars-projects-291f679e.vercel.app',
   'https://pharmacy-frontend-akhtars-projects-291f679e.vercel.app'
