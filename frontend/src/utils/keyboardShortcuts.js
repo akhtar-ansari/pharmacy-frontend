@@ -89,7 +89,8 @@ function getKeyString(event) {
 
   // Get the key name
   let key = event.key;
-  
+  if (!key) return parts.join('+');
+
   // Normalize key names
   if (key === ' ') key = 'Space';
   if (key.length === 1) key = key.toUpperCase();
