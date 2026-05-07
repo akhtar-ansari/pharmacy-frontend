@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://pharmacy-frontend-zeta.vercel.app',
   'https://pharmacy-frontend-bnhbxphxq-akhtars-projects-291f679e.vercel.app',
-  'https://pharmacy-frontend-akhtars-projects-291f679e.vercel.app', // Alternative Vercel URL
-  'https://*.vercel.app' // Allow all Vercel preview URLs
+  'https://pharmacy-frontend-akhtars-projects-291f679e.vercel.app'
 ];
 
 app.use(cors({
